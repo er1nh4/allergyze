@@ -25,9 +25,11 @@ export default function AnalyzeContent() {
 
     // Appends new allergy to list
     function addAllergyToList() {
-        const newAllergyList = (allergyList.length==0)
-            ? allergyList.concat(allergy) : allergyList.concat(', ', allergy);
-        setAllergyList(newAllergyList);
+        if (!allergyList.match(allergy)) {
+            const newAllergyList = (allergyList.length == 0)
+                ? allergyList.concat(allergy) : allergyList.concat(', ', allergy);
+            setAllergyList(newAllergyList);
+        }
     }
 
     // Compares the user's allergy list with the ingredients list.
@@ -36,8 +38,8 @@ export default function AnalyzeContent() {
         let found = "";
 
         for (let i = 0; i < allergiesSplit.length; i++) {
-            if (raw.match(allergiesSplit[i])) {
-                found += allergiesSplit[i] + ", ";
+            if (raw.match(allergiesSplit[i])&&!found.match(allergiesSplit[i])) {
+                found += allergiesSplit[i] + " ";
                 setAllergiesIdentified(found);
             }
         }
@@ -53,6 +55,31 @@ export default function AnalyzeContent() {
                 <h1 className="">
                     Is your food safe to consume?
                 </h1>
+            </div>
+
+            {/*------------------------------Check For Allergies------------------------------*/}
+
+            <div className="flex flex-col items-center justify-center p-6">
+                <form className="flex flex-col items-center w-1/2 bg-lime-800 text-stone-200 border-stone-500
+                 border-1 rounded-md py-2 px-2 m-1" onSubmit={
+                    async (event) => {
+                        event.preventDefault();
+                        await analyzeIngredients();
+                        checkForAllergies();
+                    }}>
+                    {/*--------User provides a link to an image that displays the ingredients list--------*/}
+                    <label className="text-center font-bold tracking-normal text-stone-200">
+                        Upload a link to a nutrition label for checking!
+                    </label>
+                    <input className="w-75 text-center bg-stone-500 hover:bg-stone-400 rounded-xs m-2
+                     text-stone-200 py-2 px-2" type="text" placeholder="https://some-ingredients-list.com..."
+                           onChange={event =>
+                               setIngredientsLink(event.target.value)}/>
+                    <button className="w-30 text-center bg-stone-500 hover:bg-stone-400 rounded-xs m-2
+                     text-stone-200 ">
+                        Submit
+                    </button>
+                </form>
             </div>
 
             {/*------------------------------User Input Allergies & Ingredients List------------------------------*/}
@@ -79,43 +106,26 @@ export default function AnalyzeContent() {
             </div>
             {/*--------Display when user give allergen(s)--------*/}
             {showAllergy && (
-                <div>
+                <>
                     <p className="text-stone-500"> {allergyList}</p>
-                    <button className="w-30 text-stone-500 bg-stone-300 my-2"
-                        onClick={()=>{
-                            setShowAllergy(false);
-                            setShowRes(false);
-                            setAllergyList("");
-                            }}>
-                        Clear</button>
-                </div>
+                    <div className="flex flex-box items-center justify-center p-6 space-x-10 ">
+                        <button className="w-30 text-stone-500 bg-stone-300 my-2"
+                            onClick={()=>{
+                                setShowAllergy(false);
+                                setShowRes(false);
+                                setAllergyList("");
+                                setAllergiesIdentified("");
+                                }}>
+                            Clear</button>
+                        <button className="w-30 text-stone-500 bg-stone-300 my-2"
+                                onClick={()=>{
+                                    checkForAllergies();
+                                    setShowRes(true);
+                                }}>
+                            Check!</button>
+                        </div>
+                    </>
             )}
-
-            {/*------------------------------Check For Allergies------------------------------*/}
-
-            <div className="flex flex-col items-center justify-center p-6">
-                <form className="flex flex-col items-center w-1/2 bg-lime-800 text-stone-200 border-stone-500
-                 border-1 rounded-md py-2 px-2 m-1" onSubmit={
-                    async (event) => {
-                        event.preventDefault();
-                        await analyzeIngredients();
-                        checkForAllergies();
-                        setShowRes(true);
-                    }}>
-                    {/*--------User provides a link to an image that displays the ingredients list--------*/}
-                    <label className="text-center font-bold tracking-normal text-stone-200">
-                        Upload a link to a nutrition label for checking!
-                    </label>
-                    <input className="w-75 text-center bg-stone-500 hover:bg-stone-400 rounded-xs m-2
-                     text-stone-200 py-2 px-2" type="text" placeholder="https://some-ingredients-list..."
-                        onChange={event =>
-                            setIngredientsLink(event.target.value)}/>
-                    <button className="w-30 text-center bg-stone-500 hover:bg-stone-400 rounded-xs m-2
-                     text-stone-200 ">
-                        Submit
-                    </button>
-                </form>
-            </div>
 
             {/*------------------------------Results------------------------------*/}
 
@@ -128,7 +138,7 @@ export default function AnalyzeContent() {
                             <div className="flex flex-col items-center justify-center p-6">
                                 <h1 className="text-green-950 text-2xl font-bold tracking-normal">
                                     Allergens Identified! </h1>
-                                <p className="text-stone-200">Contains: {allergiesIdentified}</p>
+                                <p className="text-stone-200"> Food contains: {allergiesIdentified}</p>
                             </div>
                         )}
                         {/*--------Display when NO ALLERGENS found--------*/}
@@ -142,8 +152,9 @@ export default function AnalyzeContent() {
                         <button className="w-30 bg-stone-500 hover:bg-stone-400 rounded-xs m-2"
                                 onClick={()=>{
                                     window.location.reload();
-                                    setAllergiesIdentified("");
+                                    setShowRes(false);
                                     setAllergyList("");
+                                    setAllergiesIdentified("");
                                     setShowAllergy(false);
                                 }}> Restart</button>
                     </div>
